@@ -4,8 +4,6 @@ package main
 	http://en.wikipedia.org/wiki/English_Braille#Alphabet
 */
 
-import "fmt"
-
 /*
 	This function parses a single letter from the english alphabet (the common 26 letters A to Z).
 	The input format is a single line, 6 character string. The original braille is simply collapsed into a single line.
