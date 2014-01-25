@@ -1,4 +1,7 @@
 package main
+
+import "errors"
+
 /*
 	A parser/mapper of braille letters: 
 	http://en.wikipedia.org/wiki/English_Braille#Alphabet
@@ -25,7 +28,11 @@ package main
 	OO
 	=> O..OOO => Z
 */
-func EnglishBraille26Letter(input string) string {
+func EnglishBraille26Letter(input string) (string, error) {
+	if len(input) != 6 {
+		return "", errors.New("The input string must have a length of 6 characters")
+	}
+
 	letterMask := 0
 	
 	for i, char := range input {
@@ -34,12 +41,17 @@ func EnglishBraille26Letter(input string) string {
 		}
 	}
 	
-	letterMapping := " aXcXbifXeXdXhjgXkXmXlspXoXnXrtqXXXXXXXXXXXXXXwXXuXxXvXXXzXy"
+	letterMapping := " a c bif e d hjg k m lsp o n rtq              w  u x v   z y"
 	if (letterMask >= len(letterMapping)) {
-		return "Y"
+		return "", errors.New("Unknown letter")
 	}
 	
-	return string(letterMapping[letterMask])
+	letter := letterMapping[letterMask]
+	if letter == ' ' {
+		return "", errors.New("Unknown letter")
+	}
+	
+	return string(letterMapping[letterMask]), nil
 }
 
 /*
@@ -64,7 +76,10 @@ func EnglishBraille26Word(input string) string {
 		letterMid := input[idx + secondLineOffset: idx + secondLineOffset + 2]
 		letterBottom := input[idx + thirdLineOffset: idx + thirdLineOffset + 2]
 		
-		word += EnglishBraille26Letter(letterTop + letterMid + letterBottom)
+		letter, error := EnglishBraille26Letter(letterTop + letterMid + letterBottom)
+		if error == nil {
+			word += letter
+		}
 	}
 	
 	return word
