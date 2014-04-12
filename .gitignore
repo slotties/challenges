@@ -8,3 +8,5 @@
 target
 dailyprogrammer/go/bin/
 dailyprogrammer/go/pkg/windows_amd64/github.com/stretchr/
+dailyprogrammer/go/src/github.com
+dailyprogrammer/go/pkg/linux_amd64/github.com/stretchr/
