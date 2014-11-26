@@ -1,7 +1,7 @@
 package main
 
 import (
-	"strings"
+	"regexp"
 )
 
 /*
@@ -34,8 +34,10 @@ func New() (*SentimentalAnalyzer) {
  */
 func (self *SentimentalAnalyzer) Score(text string) int {
 	score := 0
+	wordCounts := countWords(getWords(text))
+
 	for _, rankedWord := range self.words {
-		count := strings.Count(text, rankedWord.word)
+		count := getWordCount(rankedWord.word, wordCounts)
 		score += (count * rankedWord.score)
 	}
 
@@ -44,4 +46,27 @@ func (self *SentimentalAnalyzer) Score(text string) int {
 
 func (self *SentimentalAnalyzer) Add(word string, score int) {
 	self.words = append(self.words, RankedWord{ word, score })
+}
+
+func getWordCount(searchWord string, wordCounts map[string]int) int {
+	for word, count := range wordCounts {
+		if word == searchWord {
+			return count
+		}
+	}
+
+	return 0
+}
+
+func getWords(text string) []string {
+    words := regexp.MustCompile("\\w+")
+    return words.FindAllString(text, -1)
+}
+
+func countWords(words []string) map[string]int {
+    counts := make(map[string]int)
+    for _, word := range words {
+        counts[word]++
+    }
+    return counts
 }

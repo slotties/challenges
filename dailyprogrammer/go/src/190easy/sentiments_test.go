@@ -40,3 +40,11 @@ func TestMixed(t *testing.T) {
 	score := s.Score("Gosh, I'm so happy you're alive. You know how much I love you. You're the worst.")
 	assert.Equal(t, 1, score)
 }
+
+func TestOverlappingWords(t *testing.T) {
+	s := New()
+	s.Add("love", 1)
+	s.Add("loved", 1)
+	score := s.Score("I loved you!")
+	assert.Equal(t, 1, score)
+}
