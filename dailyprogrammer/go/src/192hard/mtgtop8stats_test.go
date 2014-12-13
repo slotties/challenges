@@ -29,3 +29,10 @@ func TestLoadCards(t *testing.T) {
 	assert.Equal(t, 3, cards["Forest"])
 	assert.Equal(t, 4, cards["Siege Rhino"])
 }
+
+func TestGetMajorEventCardStatistics(t *testing.T) {
+	stats, err := GetMajorEventCardStatistics("ST")
+
+	assert.Nil(t, err)
+	assert.True(t, stats["Forest"] > 0)
+}
