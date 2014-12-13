@@ -31,7 +31,7 @@ func TestLoadCards(t *testing.T) {
 }
 
 func TestGetMajorEventCardStatistics(t *testing.T) {
-	stats, err := GetMajorEventCardStatistics("ST")
+	stats, err := getMajorEventCardStatistics("ST")
 
 	assert.Nil(t, err)
 	assert.True(t, stats["Forest"] > 0)

@@ -7,33 +7,87 @@ import (
 	"errors"
 	"regexp"
 	"strconv"
-	//"fmt"
+	"fmt"
+	"flag"
+	"sort"
 )
 
+// The 'extractor' is used in extractData() and receives all matching substrings in a text.
 type extractor func([]string)
 
-func GetMajorEventCardStatistics(format string) (map[string]int, error) {
+func main() {
+	var format string
+	flag.StringVar(&format, "format", "ST", "The format (ST for standard, MO for modern, LE for legacy, VI for vintage)")
+	flag.Parse()
+
+	cards, err := getMajorEventCardStatistics(format)
+	if err != nil {
+		fmt.Printf("Could not get events: %v\n", err)
+	} else {
+		printSortedByCardName(cards)
+	}
+}
+
+func printSortedByCardName(cards map[string]int) {
+	cardNames := make([]string, 0)
+	for card, _ := range cards {
+		cardNames = append(cardNames, card)
+	}
+	sort.Strings(cardNames)
+
+	fmt.Printf("%40s | %s\n", "Cards", "Amount")
+	for _, cardName := range cardNames {
+		fmt.Printf("%40s | %4d\n", cardName, cards[cardName])
+	}
+}
+
+func getMajorEventCardStatistics(format string) (map[string]int, error) {
 	events, err := LoadLatestMajorEvents(format)
 	if err != nil {
 		return nil, err
 	}
 
-	cards := make(map[string]int)
-	for eventId, _ := range events {		
-		decks, err := LoadEventDecks(eventId, format)
-		if err == nil {
-			for deckId, _ := range decks {
-				deckCards, err := LoadCards(eventId, format, deckId)
-				if err == nil {
-					for card, amount := range deckCards {
-						cards[card] += amount
-					}
-				}
-			}
-		}
+	cardsChan := make(chan map[string]int)
+	for eventId, _ := range events {
+		go loadDecks(eventId, format, cardsChan)
 	}
 
+	cards := waitForCards(len(events), cardsChan)
+
 	return cards, nil
+}
+
+func waitForCards(expectedResultCount int, cardsChan chan map[string]int) map[string]int {
+	cards := make(map[string]int)
+	for i := 0; i < expectedResultCount; i++ {
+		nextCards := <- cardsChan
+		for card, amount := range nextCards {
+			cards[card] += amount
+		}				
+	}
+
+	return cards
+}
+
+func loadCards(eventId string, format string, deckId string, cardsChan chan map[string]int) {
+	deckCards, err := LoadCards(eventId, format, deckId)
+	if err != nil {
+		fmt.Printf("Could not load cards for event deck %v in event %v: %v\n", deckId, eventId, err)
+	}
+
+	cardsChan <- deckCards
+}
+
+func loadDecks(eventId string, format string, cardsChan chan map[string]int) {
+	localCardsChan := make(chan map[string]int)
+
+	decks, _ := LoadEventDecks(eventId, format)
+	for deckId, _ := range decks {
+		go loadCards(eventId, format, deckId, localCardsChan)
+	}
+
+	cards := waitForCards(len(decks), localCardsChan)
+	cardsChan <- cards
 }
 
 func LoadCards(eventId string, format string, deckId string) (map[string]int, error) {
